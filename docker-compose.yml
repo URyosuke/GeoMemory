@@ -1,0 +1,44 @@
+version: "3.9"
+
+services:
+  database:
+    image: postgres:16
+    container_name: database
+    restart: always
+    volumes:
+      - database:/var/lib/postgresql/data
+      - ./forDocker/db/initdb:/docker-entrypoint-initdb.d
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: testdb
+    ports:
+      - 5432:5432
+
+  spring-boot:
+    image: openjdk:17
+    container_name: hulk
+    build: ./hulk
+    ports:
+      - 8080:8080
+    tty: true
+    volumes:
+      - ./hulk:/workspace:cached
+    depends_on:
+      - database
+
+  react:
+    container_name: thor
+    build: ./thor
+    ports:
+      - 3030:3000
+    environment:
+      - REACT_APP_API_SERVER=http://localhost:8081/api
+    tty: true
+    volumes:
+      - ./thor:/workspace:cached
+    depends_on:
+      - database
+
+volumes:
+  database:
